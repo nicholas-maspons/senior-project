@@ -6,7 +6,7 @@ function App() {
 
   async function callHelloApi() {
     try {
-      const response = await fetch("http://localhost:3000/api/hello");
+      const response = await fetch("http://pi-1.local:3000/api/hello");
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
       }
