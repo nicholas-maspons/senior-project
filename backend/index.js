@@ -6,7 +6,7 @@ const PORT = 3000;
 
 app.use(
     cors({
-        origin: "http://localhost:5173"
+        origin: "http://pi-1.local:5173"
     })
 )
 
