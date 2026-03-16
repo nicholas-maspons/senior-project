@@ -1,16 +1,16 @@
+require('dotenv').config()
 const express = require('express');
 const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(
     cors({
-        origin: "http://192.168.1.85:5173"
+        origin: process.env.FRONTEND_URL
     })
 )
 
-// Route
 app.get("/", (req, res) => {
     res.send("Welcome to the node server...")
 });
