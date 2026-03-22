@@ -6,6 +6,8 @@ const mysql = require('mysql2');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
+
 const db = mysql.createConnection({
     host: '192.168.0.102',
     user: 'nicholas',
@@ -27,22 +29,45 @@ app.use(
     })
 )
 
-app.get("/", (req, res) => {
-    res.send("Welcome to the node server...")
-});
-
-app.get("/api/hello", (req, res) => {
-    res.json({message: "Hello from the API"})
-})
-
-app.get("/api/test", (req, res) => {
-    db.query("SELECT * FROM test", (err, results) => {
+app.get("/api/devices", (req, res) => {
+    db.query("SELECT * FROM devices", (err, results) => {
         if (err) {
             res.status(500).json({ error: err.message })
             return
         }
         res.json(results)
     })
+})
+
+app.get("/api/count", (req, res) => {
+    db.query("SELECT COUNT(*) as total FROM devices", (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message })
+            return
+        }
+        res.json({ total: results[0].total })
+    })
+})
+
+app.get("/api/myip", (req, res) => {
+    res.json({ ip: req.ip.replace('::ffff:', '') })
+})
+
+app.post("/api/checkin", (req, res) => {
+    const { name } = req.body
+    const ip = req.ip.replace('::ffff:', '')
+    db.query(
+        `INSERT INTO devices (ip, active, name) VALUES (?, 1, ?)
+         ON DUPLICATE KEY UPDATE name = VALUES(name), active = 1`,
+        [ip, name],
+        (err) => {
+            if (err) {
+                res.status(500).json({ error: err.message })
+                return
+            }
+            res.json({ success: true })
+        }
+    )
 })
 
 app.listen(PORT, '0.0.0.0', () => {
