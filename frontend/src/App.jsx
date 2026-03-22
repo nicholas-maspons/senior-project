@@ -7,7 +7,7 @@ function App() {
 
   async function callHelloApi() {
     try {
-      const response = await fetch("http://pi-1.local:3000/api/hello");
+      const response = await fetch("http://192.168.0.101:3000/api/hello");
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       const data = await response.json(); 
       setMessage(data);
@@ -19,7 +19,7 @@ function App() {
 
   async function callTestApi() {
     try {
-      const response = await fetch("http://pi-1.local:3000/api/test");
+      const response = await fetch("http://192.168.0.101:3000/api/test");
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       const data = await response.json();
       setTestData(data);

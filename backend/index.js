@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const db = mysql.createConnection({
-    host: 'pi-2.local',
+    host: '192.168.0.102',
     user: 'nicholas',
     password: 'senior-project',
     database: 'homelab'
