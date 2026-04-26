@@ -54,12 +54,38 @@ app.get("/api/myip", (req, res) => {
 })
 
 app.post("/api/checkin", (req, res) => {
-    const { name } = req.body
+    const { name, color } = req.body
     const ip = req.ip.replace('::ffff:', '')
     db.query(
-        `INSERT INTO devices (ip, active, name) VALUES (?, 1, ?)
-         ON DUPLICATE KEY UPDATE name = VALUES(name), active = 1`,
-        [ip, name],
+        `INSERT INTO devices (ip, active, name, color) VALUES (?, 1, ?, ?)
+         ON DUPLICATE KEY UPDATE name = VALUES(name), color = VALUES(color), active = 1`,
+        [ip, name, color],
+        (err) => {
+            if (err) {
+                res.status(500).json({ error: err.message })
+                return
+            }
+            res.json({ success: true })
+        }
+    )
+})
+
+app.get("/api/messages", (req, res) => {
+    db.query("SELECT * FROM messages ORDER BY created_at ASC", (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message })
+            return
+        }
+        res.json(results)
+    })
+})
+
+app.post("/api/messages", (req, res) => {
+    const { name, message } = req.body
+    const ip = req.ip.replace('::ffff:', '')
+    db.query(
+        `INSERT INTO messages (ip, name, message) VALUES (?, ?, ?)`,
+        [ip, name, message],
         (err) => {
             if (err) {
                 res.status(500).json({ error: err.message })

@@ -29,8 +29,8 @@ function getLabel(device) {
 }
 
 function getBubbleColor(device) {
-    if (PI_IPS.includes(device.ip)) return "#ffffff"
-    if (device.color && COLOR_HEX[device.color]) return COLOR_HEX[device.color]
+    if (PI_IPS.includes(device.ip)) return "#ffffff";
+    if (device.color && COLOR_HEX[device.color]) return COLOR_HEX[device.color];
     return "#00ff00";
 }
 
@@ -53,17 +53,14 @@ function useRandomPositions(ids) {
 }
 
 function MainPage() {
-
-    const [devices, setDevices] = useState([])
-    const [total, setTotal] = useState(0)
-    const [name, setName] = useState("")
-    const [color, setColor] = useState("green")
-    const [myIp, setMyIp] = useState("")
-    const [submitted, setSubmitted] = useState(false)
-
-    const navigate = useNavigate()
-
-
+    const [devices, setDevices] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [name, setName] = useState("");
+    const [color, setColor] = useState("green");
+    const [myIp, setMyIp] = useState("");
+    const [submitted, setSubmitted] = useState(false);
+    const [message, setMessage] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function fetchMyIp() {
@@ -97,6 +94,9 @@ function MainPage() {
     const activeDevices = devices.filter(d => d.active === 1 && d.ip !== ROUTER_IP);
     const positions = useRandomPositions(activeDevices.map(d => d.ip));
 
+    const myDevice = devices.find(d => d.ip === myIp);
+    const showCheckin = myDevice && !myDevice.name && !submitted;
+
     async function handleCheckin() {
         if (!name.trim()) return;
         await fetch(`${API}/api/checkin`, {
@@ -107,8 +107,16 @@ function MainPage() {
         setSubmitted(true);
     }
 
-    const myDevice = devices.find(d => d.ip === myIp);
-    const showCheckin = myDevice && !myDevice.name && !submitted;
+    async function handleSendMessage() {
+        if (!message.trim()) return;
+        const senderName = myDevice?.name || myIp;
+        await fetch(`${API}/api/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: senderName, message })
+        });
+        setMessage("");
+    }
 
     return (
         <div className="main-container">
@@ -157,13 +165,28 @@ function MainPage() {
                     return (
                         <g key={d.ip}>
                             <circle cx={pos.x} cy={pos.y} r={31} fill={getBubbleColor(d)} />
-                            <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="white" fontSize="11">
+                            <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="black" fontSize="11">
                                 {getLabel(d)}
                             </text>
                         </g>
                     );
                 })}
             </svg>
+
+            {!showCheckin && (
+                <div className="message-input-container">
+                    <input
+                        value={message}
+                        onChange={e => setMessage(e.target.value)}
+                        placeholder="Send a message..."
+                        className="checkin-input"
+                        onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                    />
+                    <button onClick={handleSendMessage} className="checkin-button">
+                        Send
+                    </button>
+                </div>
+            )}
 
             <button onClick={() => navigate("/messages")} className="messages-button">
                 View Messages
