@@ -14,14 +14,13 @@ const PI_LABELS = {
     "192.168.0.1": "Router"
 };
 
-const COLOR_OPTIONS = ["green", "blue", "red", "pink", "purple"];
+const COLOR_OPTIONS = ["red", "green", "blue", "cyan"];
 
 const COLOR_HEX = {
+    red:   "#ff0000",
     green: "#00ff00",
-    blue: "#0000ff",
-    red: "#ff0000",
-    pink: "#ff1493",
-    purple: "#800080",
+    blue:  "#0000ff",
+    cyan:  "#00ffff",
 };
 
 function getLabel(device) {
@@ -31,7 +30,7 @@ function getLabel(device) {
 function getBubbleColor(device) {
     if (PI_IPS.includes(device.ip)) return "#ffffff";
     if (device.color && COLOR_HEX[device.color]) return COLOR_HEX[device.color];
-    return "#00ff00";
+    return "#ff0000";
 }
 
 function useRandomPositions(ids) {
@@ -56,7 +55,7 @@ function MainPage() {
     const [devices, setDevices] = useState([]);
     const [total, setTotal] = useState(0);
     const [name, setName] = useState("");
-    const [color, setColor] = useState("green");
+    const [color, setColor] = useState("red");
     const [myIp, setMyIp] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [message, setMessage] = useState("");
@@ -227,9 +226,6 @@ function MessagesPage() {
             <div className="messages-list">
                 {messages.map(msg => (
                     <div key={msg.id} className="message-row">
-                        <span className="message-time">
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
                         <span className="message-name">
                             {msg.name || msg.ip}
                         </span>
