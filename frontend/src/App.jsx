@@ -14,13 +14,12 @@ const PI_LABELS = {
     "192.168.0.1": "Router"
 };
 
-const COLOR_OPTIONS = ["red", "green", "blue", "cyan"];
+const COLOR_OPTIONS = ["red", "green", "blue"];
 
 const COLOR_HEX = {
     red:   "#ff0000",
     green: "#00ff00",
     blue:  "#0000ff",
-    cyan:  "#00ffff",
 };
 
 function getLabel(device) {
