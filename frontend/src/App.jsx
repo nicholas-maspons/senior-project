@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import routerImg from "./assets/router.png";
 
 const API = "http://192.168.0.101:3000";
+
+const PI_IPS = ["192.168.0.101", "192.168.0.102", "192.168.0.103"];
+const ROUTER_IP = "192.168.0.1";
 
 const PI_LABELS = {
     "192.168.0.101": "Pi 1",
@@ -9,10 +14,24 @@ const PI_LABELS = {
     "192.168.0.1": "Router"
 };
 
-const ROUTER_IP = "192.168.0.1";
+const COLOR_OPTIONS = ["green", "blue", "red", "pink", "purple"];
+
+const COLOR_HEX = {
+    green: "#00ff00",
+    blue: "#0000ff",
+    red: "#ff0000",
+    pink: "#ff1493",
+    purple: "#800080",
+};
 
 function getLabel(device) {
     return PI_LABELS[device.ip] || device.name || device.ip;
+}
+
+function getBubbleColor(device) {
+    if (PI_IPS.includes(device.ip)) return "#ffffff"
+    if (device.color && COLOR_HEX[device.color]) return COLOR_HEX[device.color]
+    return "#00ff00";
 }
 
 function useRandomPositions(ids) {
@@ -33,12 +52,18 @@ function useRandomPositions(ids) {
     return positions.current;
 }
 
-export default function App() {
-    const [devices, setDevices] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [name, setName] = useState("");
-    const [myIp, setMyIp] = useState("");
-    const [submitted, setSubmitted] = useState(false);
+function MainPage() {
+
+    const [devices, setDevices] = useState([])
+    const [total, setTotal] = useState(0)
+    const [name, setName] = useState("")
+    const [color, setColor] = useState("green")
+    const [myIp, setMyIp] = useState("")
+    const [submitted, setSubmitted] = useState(false)
+
+    const navigate = useNavigate()
+
+
 
     useEffect(() => {
         async function fetchMyIp() {
@@ -77,7 +102,7 @@ export default function App() {
         await fetch(`${API}/api/checkin`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name })
+            body: JSON.stringify({ name, color })
         });
         setSubmitted(true);
     }
@@ -86,23 +111,34 @@ export default function App() {
     const showCheckin = myDevice && !myDevice.name && !submitted;
 
     return (
-        <div style={{ fontFamily: "sans-serif", textAlign: "center", padding: "20px" }}>
-            <h1>Homelab Network</h1>
-            <p>All-time visitors: {total}</p>
+        <div className="main-container">
+            <h1 className="title">In The Network</h1>
+            <p className="visitor-count">All-time visitors: {total}</p>
 
             {showCheckin && (
-                <div style={{ marginBottom: "20px" }}>
+                <div className="checkin-container">
                     <input
                         value={name}
                         onChange={e => setName(e.target.value)}
                         placeholder="Enter your name"
-                        style={{ padding: "8px", marginRight: "8px" }}
+                        className="checkin-input"
                     />
-                    <button onClick={handleCheckin}>Check In</button>
+                    <select
+                        value={color}
+                        onChange={e => setColor(e.target.value)}
+                        className="checkin-select"
+                    >
+                        {COLOR_OPTIONS.map(c => (
+                            <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                        ))}
+                    </select>
+                    <button onClick={handleCheckin} className="checkin-button">
+                        Check In
+                    </button>
                 </div>
             )}
 
-            <svg width="500" height="500" style={{ border: "1px solid #ccc", borderRadius: "8px" }}>
+            <svg width="500" height="500" className="network-svg">
                 {activeDevices.map(d => {
                     const pos = positions[d.ip];
                     if (!pos) return null;
@@ -110,18 +146,17 @@ export default function App() {
                         <line key={d.ip}
                             x1={250} y1={250}
                             x2={pos.x} y2={pos.y}
-                            stroke="#aaa" strokeWidth="1.5"
+                            stroke="white" strokeWidth="1.5"
                         />
                     );
                 })}
-                <circle cx={250} cy={250} r={40} fill="#4a90e2" />
-                <text x={250} y={255} textAnchor="middle" fill="white" fontSize="13">Router</text>
+                <image href={routerImg} x={210} y={210} width={80} height={80} />
                 {activeDevices.map(d => {
                     const pos = positions[d.ip];
                     if (!pos) return null;
                     return (
                         <g key={d.ip}>
-                            <circle cx={pos.x} cy={pos.y} r={25} fill="#e27a4a" />
+                            <circle cx={pos.x} cy={pos.y} r={31} fill={getBubbleColor(d)} />
                             <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="white" fontSize="11">
                                 {getLabel(d)}
                             </text>
@@ -129,6 +164,66 @@ export default function App() {
                     );
                 })}
             </svg>
+
+            <button onClick={() => navigate("/messages")} className="messages-button">
+                View Messages
+            </button>
         </div>
+    );
+}
+
+function MessagesPage() {
+    const [messages, setMessages] = useState([]);
+    const bottomRef = useRef(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        async function fetchMessages() {
+            try {
+                const res = await fetch(`${API}/api/messages`);
+                const data = await res.json();
+                setMessages(data);
+            } catch (e) {}
+        }
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]);
+
+    return (
+        <div className="messages-container">
+            <button onClick={() => navigate("/")} className="back-button">
+                ← Back
+            </button>
+            <div className="messages-list">
+                {messages.map(msg => (
+                    <div key={msg.id} className="message-row">
+                        <span className="message-time">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="message-name">
+                            {msg.name || msg.ip}
+                        </span>
+                        <span className="message-text">{msg.message}</span>
+                    </div>
+                ))}
+                <div ref={bottomRef} />
+            </div>
+        </div>
+    );
+}
+
+export default function App() {
+    return (
+        <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
+        </Routes>
     );
 }
